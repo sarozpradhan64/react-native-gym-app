@@ -7,6 +7,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState, useEffect, useRef } from 'react';
 import { useSessionStore } from '../store/useSessionStore';
@@ -44,6 +45,13 @@ const PRESET_EXERCISES = [
   { name: 'Face Pull', muscle_group: 'Shoulders' },
   { name: 'Hammer Curl', muscle_group: 'Biceps' },
 ];
+
+const PRESET_GROUPED = Object.entries(
+  PRESET_EXERCISES.reduce((acc, ex) => {
+    (acc[ex.muscle_group] = acc[ex.muscle_group] || []).push(ex);
+    return acc;
+  }, {} as Record<string, typeof PRESET_EXERCISES>)
+).sort(([a], [b]) => a.localeCompare(b)).map(([category, items]) => ({ category, items }));
 
 const REST_PRESETS = [60, 90, 120, 180];
 
@@ -265,9 +273,10 @@ export default function ActiveSessionScreen({ navigation }: any) {
   }
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <View style={{ flex: 1, backgroundColor: '#131313' }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <View>
           <Text style={{ color: '#e5e2e1', fontWeight: 'bold', fontSize: 22 }}>Active Session</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
@@ -383,15 +392,19 @@ export default function ActiveSessionScreen({ navigation }: any) {
 
             {/* Presets */}
             <Text style={{ color: '#b3b3b3', fontSize: 12, fontWeight: '600', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Quick Pick</Text>
-            {PRESET_EXERCISES.map(ex => (
-              <TouchableOpacity
-                key={ex.name}
-                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}
-                onPress={() => addExercise(ex.name, ex.muscle_group)}
-              >
-                <Text style={{ color: '#e5e2e1', fontWeight: '500' }}>{ex.name}</Text>
-                <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '600', textTransform: 'uppercase' }}>{ex.muscle_group}</Text>
-              </TouchableOpacity>
+            {PRESET_GROUPED.map(({ category, items }) => (
+              <View key={category}>
+                <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}>{category}</Text>
+                {items.map(ex => (
+                  <TouchableOpacity
+                    key={ex.name}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}
+                    onPress={() => addExercise(ex.name, ex.muscle_group)}
+                  >
+                    <Text style={{ color: '#e5e2e1', fontWeight: '500' }}>{ex.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             ))}
           </View>
         )}
@@ -419,5 +432,6 @@ export default function ActiveSessionScreen({ navigation }: any) {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }

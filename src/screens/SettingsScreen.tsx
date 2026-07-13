@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Moon, Bell, Info, Trash2, User, X, ChevronDown, ChevronUp, Clock } from 'lucide-react-native';
@@ -204,8 +205,9 @@ export default function SettingsScreen() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <View style={{ flex: 1, backgroundColor: '#131313' }}>
-      <ScrollView contentContainerStyle={{ paddingTop: 40, paddingBottom: 80 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 80 }}>
         <Text style={{ color: '#e5e2e1', fontSize: 28, fontWeight: 'bold', paddingHorizontal: 16, marginBottom: 24 }}>
           Settings
         </Text>
@@ -484,6 +486,7 @@ export default function SettingsScreen() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }
 

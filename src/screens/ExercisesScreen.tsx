@@ -7,13 +7,14 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
-import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import * as FileSystem from 'expo-file-system';
-import { Plus, X, Trash2, Dumbbell, Link, Image as ImageIcon, GripVertical } from 'lucide-react-native';
+import { Plus, X, Trash2, Dumbbell, Link, Image as ImageIcon } from 'lucide-react-native';
 
 interface Exercise {
   id: number;
@@ -118,17 +119,23 @@ export default function ExercisesScreen() {
     ]);
   };
 
-  const onDragEnd = async ({ data }: { data: Exercise[] }) => {
-    setExercises(data);
-    for (let i = 0; i < data.length; i++) {
-      await db.runAsync('UPDATE exercises SET order_index = ? WHERE id = ?', [i, data[i].id]);
-    }
-  };
+  // Group exercises by muscle_group, sorted alphabetically by category then name
+  const grouped: { category: string; items: Exercise[] }[] = [];
+  const map = new Map<string, Exercise[]>();
+  for (const ex of exercises) {
+    const key = ex.muscle_group.trim() || 'Other';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(ex);
+  }
+  Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([category, items]) => grouped.push({ category, items }));
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <View style={{ flex: 1, backgroundColor: '#131313' }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Text style={{ color: '#e5e2e1', fontWeight: 'bold', fontSize: 26 }}>Library</Text>
         <TouchableOpacity
           style={{ backgroundColor: '#f2ca50', w: 40, h: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', padding: 8 }}
@@ -138,49 +145,49 @@ export default function ExercisesScreen() {
         </TouchableOpacity>
       </View>
 
-      <DraggableFlatList
-        data={exercises}
-        keyExtractor={item => item.id.toString()}
-        onDragEnd={onDragEnd}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 80 }}
-        ListEmptyComponent={
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 80 }}>
+        {exercises.length === 0 && (
           <View style={{ alignItems: 'center', paddingVertical: 48, backgroundColor: '#232323', borderRadius: 12, borderWidth: 1, borderColor: '#2d2d2d', borderStyle: 'dashed' }}>
             <Dumbbell color="#6b6b6b" size={32} style={{ marginBottom: 12 }} />
-            <Text style={{ color: '#6b6b6b', textAlign: 'center' }}>No custom exercises yet.{'\n'}Tap the + button to add one.</Text>
+            <Text style={{ color: '#6b6b6b', textAlign: 'center' }}>No custom exercises yet.{`\n`}Tap the + button to add one.</Text>
           </View>
-        }
-        renderItem={({ item: ex, drag, isActive }: RenderItemParams<Exercise>) => (
-          <ScaleDecorator>
-            <TouchableOpacity 
-              onLongPress={drag} 
-              delayLongPress={200}
-              activeOpacity={0.7}
-              style={{ backgroundColor: '#232323', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: isActive ? '#f2ca50' : '#2d2d2d', overflow: 'hidden' }}
-            >
-              {ex.local_image_uri ? (
-                <View style={{ backgroundColor: '#1c1b1b', height: 160, width: '100%', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: '#2d2d2d' }}>
-                  <Image source={{ uri: ex.local_image_uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
-                </View>
-              ) : (
-                <View style={{ backgroundColor: '#1c1b1b', height: 60, width: '100%', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: '#2d2d2d' }}>
-                  <ImageIcon color="#2d2d2d" size={32} />
-                </View>
-              )}
-              <View style={{ padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#e5e2e1', fontWeight: 'bold', fontSize: 16 }}>{ex.name}</Text>
-                  <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
-                    {ex.muscle_group}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => handleDelete(ex.id, ex.name, ex.local_image_uri)} style={{ padding: 8 }}>
-                  <Trash2 color="#ef4444" size={20} />
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          </ScaleDecorator>
         )}
-      />
+        {grouped.map(({ category, items }) => (
+          <View key={category} style={{ marginBottom: 8 }}>
+            {/* Category header */}
+            <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 10 }}>
+              {category}
+            </Text>
+            {items.map(ex => (
+              <View
+                key={ex.id}
+                style={{ backgroundColor: '#232323', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#2d2d2d', overflow: 'hidden' }}
+              >
+                {ex.local_image_uri ? (
+                  <View style={{ backgroundColor: '#1c1b1b', height: 160, width: '100%', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: '#2d2d2d' }}>
+                    <Image source={{ uri: ex.local_image_uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                  </View>
+                ) : (
+                  <View style={{ backgroundColor: '#1c1b1b', height: 60, width: '100%', alignItems: 'center', justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: '#2d2d2d' }}>
+                    <ImageIcon color="#2d2d2d" size={32} />
+                  </View>
+                )}
+                <View style={{ padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: '#e5e2e1', fontWeight: 'bold', fontSize: 16 }}>{ex.name}</Text>
+                    <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
+                      {ex.muscle_group}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleDelete(ex.id, ex.name, ex.local_image_uri)} style={{ padding: 8 }}>
+                    <Trash2 color="#ef4444" size={20} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
 
       {/* Add Exercise Modal */}
       <Modal transparent visible={showAddModal} animationType="slide">
@@ -243,5 +250,6 @@ export default function ExercisesScreen() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }

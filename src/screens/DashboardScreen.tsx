@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useSQLiteContext } from "expo-sqlite";
 import { useState, useCallback } from "react";
 import { useFocusEffect } from "@react-navigation/native";
@@ -149,9 +150,10 @@ export default function DashboardScreen({ navigation }: any) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerStyle={{ padding: 16, paddingTop: 40, paddingBottom: 80 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
     >
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
@@ -303,5 +305,6 @@ export default function DashboardScreen({ navigation }: any) {
         ))
       )}
     </ScrollView>
+    </SafeAreaView>
   );
 }

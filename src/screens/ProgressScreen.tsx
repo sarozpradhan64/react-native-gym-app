@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
@@ -281,9 +282,10 @@ export default function ProgressScreen() {
   );
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <View style={{ flex: 1, backgroundColor: '#131313' }}>
       {/* Page header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 14, backgroundColor: '#131313' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#131313' }}>
         <Text style={{ color: '#e5e2e1', fontWeight: 'bold', fontSize: 30 }}>Progress</Text>
       </View>
 
@@ -362,5 +364,6 @@ export default function ProgressScreen() {
         </View>
       </Modal>
     </View>
+    </SafeAreaView>
   );
 }

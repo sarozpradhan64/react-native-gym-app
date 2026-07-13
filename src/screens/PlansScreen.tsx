@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import DraggableFlatList, {
   ScaleDecorator,
   RenderItemParams,
@@ -79,7 +80,8 @@ export default function PlansScreen({ navigation }: any) {
   };
 
   return (
-    <View className="flex-1 bg-background p-4 pt-10">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
+    <View className="flex-1 bg-background p-4">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
         <Text className="text-3xl font-bold text-on-surface">
@@ -190,5 +192,6 @@ export default function PlansScreen({ navigation }: any) {
         )}
       />
     </View>
+    </SafeAreaView>
   );
 }

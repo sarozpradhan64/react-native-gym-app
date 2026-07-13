@@ -5,6 +5,7 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState, useEffect } from 'react';
@@ -37,6 +38,13 @@ const PRESET_EXERCISES = [
   { name: 'Face Pull', muscle_group: 'Shoulders' },
   { name: 'Hammer Curl', muscle_group: 'Biceps' },
 ];
+
+const PRESET_GROUPED = Object.entries(
+  PRESET_EXERCISES.reduce((acc, ex) => {
+    (acc[ex.muscle_group] = acc[ex.muscle_group] || []).push(ex);
+    return acc;
+  }, {} as Record<string, typeof PRESET_EXERCISES>)
+).sort(([a], [b]) => a.localeCompare(b)).map(([category, items]) => ({ category, items }));
 
 // ─── Inline-editable exercise card ───────────────────────────────────────────
 function ExerciseCard({
@@ -176,7 +184,6 @@ export default function PlanDetailScreen({ route, navigation }: any) {
 
   const addExercise = async (name: string, muscle: string) => {
     const exerciseId = await getOrCreateExercise(name, muscle);
-    // Avoid duplicates in this plan
     const dup = await db.getFirstAsync<{ id: number }>(
       'SELECT id FROM workout_plan_exercises WHERE workout_plan_id = ? AND exercise_id = ?',
       [planId, exerciseId]
@@ -220,9 +227,10 @@ export default function PlanDetailScreen({ route, navigation }: any) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#131313' }}>
     <View style={{ flex: 1, backgroundColor: '#131313' }}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 40, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, backgroundColor: '#1c1b1b', borderBottomWidth: 1, borderBottomColor: '#2d2d2d', flexDirection: 'row', alignItems: 'center' }}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12, padding: 4 }}>
           <ArrowLeft color="#e5e2e1" size={24} />
         </TouchableOpacity>
@@ -259,7 +267,6 @@ export default function PlanDetailScreen({ route, navigation }: any) {
         }
         ListFooterComponent={
           <>
-            {/* Add Exercise toggle */}
             <TouchableOpacity
               style={{ borderWidth: 2, borderStyle: 'dashed', borderColor: '#2d2d2d', borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 12, flexDirection: 'row', justifyContent: 'center' }}
               onPress={() => setShowPicker(!showPicker)}
@@ -267,10 +274,8 @@ export default function PlanDetailScreen({ route, navigation }: any) {
               <Text style={{ color: '#b3b3b3', fontWeight: '600' }}>{showPicker ? '− Close' : '+ Add Exercise'}</Text>
             </TouchableOpacity>
 
-            {/* Picker */}
             {showPicker && (
               <View style={{ backgroundColor: '#232323', borderRadius: 12, borderWidth: 1, borderColor: '#2d2d2d', marginBottom: 32, overflow: 'hidden' }}>
-                {/* Custom */}
                 <View style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#2d2d2d' }}>
                   <Text style={{ color: '#e5e2e1', fontWeight: 'bold', marginBottom: 8 }}>Custom Exercise</Text>
                   <TextInput
@@ -297,17 +302,20 @@ export default function PlanDetailScreen({ route, navigation }: any) {
                   </TouchableOpacity>
                 </View>
 
-                {/* Presets */}
                 <Text style={{ color: '#b3b3b3', fontSize: 12, fontWeight: '600', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Quick Pick</Text>
-                {PRESET_EXERCISES.map(ex => (
-                  <TouchableOpacity
-                    key={ex.name}
-                    style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}
-                    onPress={() => addExercise(ex.name, ex.muscle_group)}
-                  >
-                    <Text style={{ color: '#e5e2e1', fontWeight: '500' }}>{ex.name}</Text>
-                    <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '600', textTransform: 'uppercase' }}>{ex.muscle_group}</Text>
-                  </TouchableOpacity>
+                {PRESET_GROUPED.map(({ category, items }) => (
+                  <View key={category}>
+                    <Text style={{ color: '#f2ca50', fontSize: 11, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase', paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}>{category}</Text>
+                    {items.map(ex => (
+                      <TouchableOpacity
+                        key={ex.name}
+                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#2d2d2d' }}
+                        onPress={() => addExercise(ex.name, ex.muscle_group)}
+                      >
+                        <Text style={{ color: '#e5e2e1', fontWeight: '500' }}>{ex.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                 ))}
               </View>
             )}
@@ -315,5 +323,6 @@ export default function PlanDetailScreen({ route, navigation }: any) {
         }
       />
     </View>
+    </SafeAreaView>
   );
 }
