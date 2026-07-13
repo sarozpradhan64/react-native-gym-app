@@ -16,7 +16,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { Alert } from 'react-native';
 import { useUserStore } from '../store/useUserStore';
 import { useRemindersStore, DayReminder } from '../store/useRemindersStore';
-import { scheduleReminders, cancelAllReminders, requestNotificationPermissions } from '../utils/notifications';
+import { scheduleReminders, cancelAllReminders, requestLocalNotificationPermissions } from '../utils/notifications';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const DAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -80,7 +80,7 @@ export default function SettingsScreen() {
     setRemindersEnabled(value);
     if (value) {
       setRemindersExpanded(true);
-      await requestNotificationPermissions();
+      await requestLocalNotificationPermissions();
     } else {
       // Disable all days
       const cleared = reminders.map((r) => ({ ...r, enabled: false }));

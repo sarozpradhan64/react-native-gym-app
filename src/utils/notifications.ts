@@ -14,7 +14,7 @@ Notifications.setNotificationHandler({
 
 const NOTIFICATION_TAG = 'blaze-fitness-workout-reminder';
 
-export async function requestNotificationPermissions(): Promise<boolean> {
+export async function requestLocalNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -33,7 +33,7 @@ export async function scheduleReminders(reminders: DayReminder[]): Promise<void>
   const enabledDays = reminders.filter((r) => r.enabled);
   if (enabledDays.length === 0) return;
 
-  const hasPermission = await requestNotificationPermissions();
+  const hasPermission = await requestLocalNotificationPermissions();
   if (!hasPermission) return;
 
   for (const reminder of enabledDays) {

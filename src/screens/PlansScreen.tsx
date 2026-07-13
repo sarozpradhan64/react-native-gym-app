@@ -1,9 +1,12 @@
-import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
-import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
-import { useSQLiteContext } from 'expo-sqlite';
-import { useState, useEffect, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import { Plus, Trash2, ChevronRight, GripVertical } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import DraggableFlatList, {
+  ScaleDecorator,
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
+import { useSQLiteContext } from "expo-sqlite";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { Plus, Trash2, ChevronRight, GripVertical } from "lucide-react-native";
 
 interface Plan {
   id: number;
@@ -17,8 +20,8 @@ export default function PlansScreen({ navigation }: any) {
   const db = useSQLiteContext();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isAdding, setIsAdding] = useState(false);
-  const [newPlanName, setNewPlanName] = useState('');
-  const [newPlanDesc, setNewPlanDesc] = useState('');
+  const [newPlanName, setNewPlanName] = useState("");
+  const [newPlanDesc, setNewPlanDesc] = useState("");
 
   const loadPlans = async () => {
     const loaded = await db.getAllAsync<Plan>(`
@@ -36,29 +39,29 @@ export default function PlansScreen({ navigation }: any) {
   useFocusEffect(
     useCallback(() => {
       loadPlans();
-    }, [])
+    }, []),
   );
 
   const handleAddPlan = async () => {
     if (!newPlanName.trim()) return;
     await db.runAsync(
-      'INSERT INTO workout_plans (name, description, order_index) VALUES (?, ?, ?)',
-      [newPlanName.trim(), newPlanDesc.trim(), plans.length]
+      "INSERT INTO workout_plans (name, description, order_index) VALUES (?, ?, ?)",
+      [newPlanName.trim(), newPlanDesc.trim(), plans.length],
     );
-    setNewPlanName('');
-    setNewPlanDesc('');
+    setNewPlanName("");
+    setNewPlanDesc("");
     setIsAdding(false);
     loadPlans();
   };
 
   const handleDelete = (id: number, name: string) => {
-    Alert.alert('Delete Plan', `Delete "${name}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert("Delete Plan", `Delete "${name}"? This cannot be undone.`, [
+      { text: "Cancel", style: "cancel" },
       {
-        text: 'Delete',
-        style: 'destructive',
+        text: "Delete",
+        style: "destructive",
         onPress: async () => {
-          await db.runAsync('DELETE FROM workout_plans WHERE id = ?', [id]);
+          await db.runAsync("DELETE FROM workout_plans WHERE id = ?", [id]);
           loadPlans();
         },
       },
@@ -68,7 +71,10 @@ export default function PlansScreen({ navigation }: any) {
   const onDragEnd = async ({ data }: { data: Plan[] }) => {
     setPlans(data);
     for (let i = 0; i < data.length; i++) {
-      await db.runAsync('UPDATE workout_plans SET order_index = ? WHERE id = ?', [i, data[i].id]);
+      await db.runAsync(
+        "UPDATE workout_plans SET order_index = ? WHERE id = ?",
+        [i, data[i].id],
+      );
     }
   };
 
@@ -76,7 +82,9 @@ export default function PlansScreen({ navigation }: any) {
     <View className="flex-1 bg-background p-4 pt-10">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-3xl font-bold text-on-surface">Workout Plans</Text>
+        <Text className="text-3xl font-bold text-on-surface">
+          Workout Plans
+        </Text>
         <TouchableOpacity
           className="bg-primary w-10 h-10 rounded-full items-center justify-center"
           onPress={() => setIsAdding(!isAdding)}
@@ -88,7 +96,9 @@ export default function PlansScreen({ navigation }: any) {
       {/* Add Plan Form */}
       {isAdding && (
         <View className="bg-surface-container p-4 rounded-xl mb-5 border border-surface-bright">
-          <Text className="text-on-surface font-bold mb-3 text-base">New Workout Plan</Text>
+          <Text className="text-on-surface font-bold mb-3 text-base">
+            New Workout Plan
+          </Text>
           <TextInput
             className="bg-surface-bright text-on-surface p-3 rounded-lg mb-3"
             placeholder="Plan Name (e.g. Push Day)"
@@ -108,7 +118,10 @@ export default function PlansScreen({ navigation }: any) {
             onSubmitEditing={handleAddPlan}
           />
           <View className="flex-row justify-end">
-            <TouchableOpacity onPress={() => setIsAdding(false)} className="px-4 py-2 mr-2">
+            <TouchableOpacity
+              onPress={() => setIsAdding(false)}
+              className="px-4 py-2 mr-2"
+            >
               <Text className="text-on-variant font-semibold">Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -123,21 +136,26 @@ export default function PlansScreen({ navigation }: any) {
 
       <DraggableFlatList
         data={plans}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         onDragEnd={onDragEnd}
         contentContainerStyle={{ paddingBottom: 80 }}
         ListEmptyComponent={
           <View className="items-center py-16">
             <Text className="text-on-variant text-center text-base">
-              No plans yet.{'\n'}Tap the + button to create one.
+              No plans yet.{"\n"}Tap the + button to create one.
             </Text>
           </View>
         }
         renderItem={({ item, drag, isActive }: RenderItemParams<Plan>) => (
           <ScaleDecorator>
             <TouchableOpacity
-              className={`bg-surface-container rounded-xl p-4 mb-3 border border-surface-bright flex-row items-center ${isActive ? 'border-primary' : ''}`}
-              onPress={() => navigation.navigate('PlanDetail', { planId: item.id, planName: item.name })}
+              className={`bg-surface-container rounded-xl p-4 mb-3 border border-surface-bright flex-row items-center ${isActive ? "border-primary" : ""}`}
+              onPress={() =>
+                navigation.navigate("PlanDetail", {
+                  planId: item.id,
+                  planName: item.name,
+                })
+              }
               onLongPress={drag}
               delayLongPress={200}
               activeOpacity={0.7}
@@ -145,12 +163,17 @@ export default function PlansScreen({ navigation }: any) {
               {/* Gold accent bar */}
               <View className="w-1 rounded-full bg-primary mr-3 self-stretch" />
               <View className="flex-1">
-                <Text className="text-on-surface font-bold text-lg">{item.name}</Text>
+                <Text className="text-on-surface font-bold text-lg">
+                  {item.name}
+                </Text>
                 {item.description ? (
-                  <Text className="text-on-variant mt-0.5 text-sm">{item.description}</Text>
+                  <Text className="text-on-variant mt-0.5 text-md">
+                    {item.description}
+                  </Text>
                 ) : null}
                 <Text className="text-primary text-xs font-semibold mt-1 uppercase tracking-widest">
-                  {item.exercise_count} exercise{item.exercise_count !== 1 ? 's' : ''}
+                  {item.exercise_count} exercise
+                  {item.exercise_count !== 1 ? "s" : ""}
                 </Text>
               </View>
               <View className="flex-row items-center">
